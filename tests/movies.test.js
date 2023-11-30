@@ -3,6 +3,7 @@ const request = require("supertest");
 const app = require("../src/app");
 
 const database = require("../database");
+const { deleteMovie } = require("../src/controllers/movieControllers");
 
 afterAll(() => database.end());
 
@@ -187,10 +188,7 @@ describe("DELETE /api/movies/:id", () => {
 
       duration: 120,
     };
-    const include = await request(app).post("/api/movies").send(deletedMovie);
-    expect(include.status).toEqual(201);
-    expect(include.body).toHaveProperty("id");
-    expect(typeof include.body.id).toBe("number");
+    
     const [resultData] = await database.query(
       "INSERT INTO movies(title, director, year, color, duration) VALUES (?, ?, ?, ?, ?)",
       [deletedMovie.title, deletedMovie.director, deletedMovie.year, deletedMovie.color, deletedMovie.duration]
@@ -201,5 +199,9 @@ describe("DELETE /api/movies/:id", () => {
     const [result] = await database.query(`SELECT * FROM movies WHERE id=${id}`);
     expect(result === null);
 
+  
+  const responseError = await request(app).delete("/api/movies/0").send(deletedMovie);
+
+    expect(responseError.status).toEqual(404);
   });
 });
