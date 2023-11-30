@@ -92,7 +92,7 @@ describe("POST /api/users", () => {
 
       .send(userWithMissingProps);
 
-    expect(responseUser.status).toEqual(500);
+    expect(responseUser.status).toEqual(422);
   });
 });
 
