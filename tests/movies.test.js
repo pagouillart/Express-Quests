@@ -92,7 +92,7 @@ describe("POST /api/movies", () => {
 
       .send(movieWithMissingProps);
 
-    expect(response.status).toEqual(500);
+    expect(response.status).toEqual(422);
   });
 });
 
@@ -171,5 +171,35 @@ describe("PUT /api/movies/:id", () => {
     const response = await request(app).put("/api/movies/0").send(newMovie);
 
     expect(response.status).toEqual(404);
+  });
+});
+
+describe("DELETE /api/movies/:id", () => {
+  it("shouldn't return movie", async () => {
+    const deletedMovie = {
+      title: "Star Wars",
+
+      director: "George Lucas",
+
+      year: "1977",
+
+      color: "1",
+
+      duration: 120,
+    };
+    const include = await request(app).post("/api/movies").send(deletedMovie);
+    expect(include.status).toEqual(201);
+    expect(include.body).toHaveProperty("id");
+    expect(typeof include.body.id).toBe("number");
+    const [resultData] = await database.query(
+      "INSERT INTO movies(title, director, year, color, duration) VALUES (?, ?, ?, ?, ?)",
+      [deletedMovie.title, deletedMovie.director, deletedMovie.year, deletedMovie.color, deletedMovie.duration]
+    );
+    const id = resultData.insertId;
+    const response = await request(app).delete(`/api/movies/${id}`).send(deletedMovie);
+    expect(response.status).toEqual(204);
+    const [result] = await database.query(`SELECT * FROM movies WHERE id=${id}`);
+    expect(result === null);
+
   });
 });
